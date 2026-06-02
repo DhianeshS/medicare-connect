@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-teal: #00B69B;
+  --color-secondary-navy: #0F172A;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-emergency: #EF4444;
+  --color-background: #F8FAFC;
+  
+  --radius-card: 1.5rem;
+  --shadow-soft: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+@layer base {
+  body {
+    @apply bg-white text-slate-900 font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-secondary-navy;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-card shadow-soft p-6 border border-slate-100;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-teal hover:bg-[#009E86] text-white font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-lg shadow-primary-teal/20 active:scale-95;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary-teal text-primary-teal hover:bg-primary-teal hover:text-white font-bold py-3 px-6 rounded-full transition-all duration-300;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-teal/20 focus:border-primary-teal transition-all bg-slate-50/50;
+  }
+  
+  .nav-link {
+    @apply text-slate-600 hover:text-primary-teal font-medium transition-colors duration-200;
+  }
+}
+
+/* Custom Utilities for the Demo Design */
+.hero-gradient {
+  background: radial-gradient(circle at 10% 20%, rgba(0, 182, 155, 0.05) 0%, rgba(255, 255, 255, 1) 90%);
+}
+
+.feature-tag {
+  @apply bg-primary-teal/10 text-primary-teal px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
