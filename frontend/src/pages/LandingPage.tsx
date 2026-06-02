@@ -10,12 +10,24 @@ import {
   Menu,
   X,
   ChevronDown,
-  Play
+  Play,
+  AlertCircle
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Form states
+  const [demoName, setDemoName] = useState('');
+  const [demoEmail, setDemoEmail] = useState('');
+  const [demoHospital, setDemoHospital] = useState('');
+  const [demoPhone, setDemoPhone] = useState('');
+  const [demoLocation, setDemoLocation] = useState('');
+  const [securityAnswer, setSecurityAnswer] = useState('');
+  const [demoError, setDemoError] = useState('');
 
   const features = [
     { icon: <Users size={20} className="text-primary-teal" />, text: "Patient Lifecycle Management (OPD to Discharge)" },
@@ -77,7 +89,20 @@ const LandingPage: React.FC = () => {
              <div className="block font-medium text-slate-600">Company</div>
              <div className="block font-medium text-slate-600">Resources</div>
              <Link to="/contact" className="block font-medium text-slate-600">Contact</Link>
-             <button className="w-full btn-primary py-4">Get Started</button>
+             <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
+               <button 
+                 onClick={() => { navigate('/register'); setIsMenuOpen(false); }}
+                 className="w-full btn-primary py-4"
+               >
+                 Get Free Demo
+               </button>
+               <button 
+                 onClick={() => { navigate('/login'); setIsMenuOpen(false); }}
+                 className="w-full py-4 bg-slate-50 border border-slate-200 text-slate-600 font-black rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
+               >
+                 <ArrowRight size={18} className="rotate-[-45deg]" /> Login to Portal
+               </button>
+             </div>
           </div>
         )}
       </nav>
@@ -114,14 +139,17 @@ const LandingPage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-6">
-              <button className="bg-primary-teal text-white p-4 rounded-full shadow-xl shadow-primary-teal/20 hover:scale-110 transition-all flex items-center gap-2 font-bold px-8">
+              <button 
+                onClick={() => document.getElementById('demo-form-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="bg-primary-teal text-white p-4 rounded-full shadow-xl shadow-primary-teal/20 hover:scale-110 transition-all flex items-center gap-2 font-bold px-8"
+              >
                  <Play size={20} fill="white" /> Book Demo
               </button>
             </div>
           </div>
 
           {/* Registration Form / Demo Request */}
-          <div className="w-full lg:w-[500px] animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div id="demo-form-section" className="w-full lg:w-[500px] animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 p-10 relative">
               <div className="text-center mb-10">
                 <h2 className="text-3xl font-black text-secondary-navy mb-2">
@@ -130,31 +158,108 @@ const LandingPage: React.FC = () => {
                 <p className="text-slate-500 text-sm">Experience MediCare Connect firsthand. Schedule your personalized demo.</p>
               </div>
 
-              <form className="space-y-6">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setDemoError('');
+                  if (!demoName || !demoEmail || !demoHospital || !demoLocation || !demoPhone) {
+                    setDemoError('Please fill out all required fields.');
+                    return;
+                  }
+                  const ans = securityAnswer.trim();
+                  if (ans !== '19' && ans !== '21') {
+                    setDemoError('Security check failed! Hint: 9 + 10 = 19');
+                    return;
+                  }
+                  
+                  const firstName = demoName.split(' ')[0] || 'Demo';
+                  const lastName = demoName.split(' ').slice(1).join(' ') || 'Patient';
+                  
+                  // Auto-login into the Patient Bypass
+                  login({
+                    id: 99,
+                    email: demoEmail,
+                    firstName: firstName,
+                    lastName: lastName,
+                    role: 'ROLE_PATIENT'
+                  }, 'demo-token');
+
+                  // Save custom patient info in localStorage so it reflects inside settings
+                  localStorage.setItem(`patient_demo_info`, JSON.stringify({
+                    hospital: demoHospital,
+                    location: demoLocation,
+                    phone: demoPhone
+                  }));
+
+                  navigate('/dashboard');
+                }} 
+                className="space-y-6"
+              >
+                {demoError && (
+                  <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold border border-red-100 flex items-center gap-2 animate-shake">
+                    <AlertCircle size={16} /> {demoError}
+                  </div>
+                )}
+
                 <div>
                   <label className="text-xs font-bold text-slate-400 uppercase ml-1 mb-1.5 block">Your Name *</label>
-                  <input type="text" className="input-field" placeholder="Enter your full name" />
+                  <input 
+                    type="text" 
+                    required
+                    value={demoName}
+                    onChange={(e) => setDemoName(e.target.value)}
+                    className="input-field" 
+                    placeholder="Enter your full name" 
+                  />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase ml-1 mb-1.5 block">Hospital Name *</label>
-                    <input type="text" className="input-field" placeholder="Hospital/Clinic" />
+                    <input 
+                      type="text" 
+                      required
+                      value={demoHospital}
+                      onChange={(e) => setDemoHospital(e.target.value)}
+                      className="input-field" 
+                      placeholder="Hospital/Clinic" 
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase ml-1 mb-1.5 block">Location *</label>
-                    <input type="text" className="input-field" placeholder="City, State" />
+                    <input 
+                      type="text" 
+                      required
+                      value={demoLocation}
+                      onChange={(e) => setDemoLocation(e.target.value)}
+                      className="input-field" 
+                      placeholder="City, State" 
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase ml-1 mb-1.5 block">Email Address *</label>
-                    <input type="email" className="input-field" placeholder="name@work.com" />
+                    <input 
+                      type="email" 
+                      required
+                      value={demoEmail}
+                      onChange={(e) => setDemoEmail(e.target.value)}
+                      className="input-field" 
+                      placeholder="name@work.com" 
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase ml-1 mb-1.5 block">Phone Number *</label>
-                    <input type="tel" className="input-field" placeholder="+91 ..." />
+                    <input 
+                      type="tel" 
+                      required
+                      value={demoPhone}
+                      onChange={(e) => setDemoPhone(e.target.value)}
+                      className="input-field" 
+                      placeholder="+91 ..." 
+                    />
                   </div>
                 </div>
 
@@ -162,10 +267,20 @@ const LandingPage: React.FC = () => {
                    <div className="flex justify-between items-center mb-4">
                       <span className="text-sm font-bold text-slate-600">Security Check: What is 9 + 10?</span>
                    </div>
-                   <input type="text" className="w-full bg-white border border-slate-200 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-primary-teal/20" placeholder="Enter answer" />
+                   <input 
+                     type="text" 
+                     required
+                     value={securityAnswer}
+                     onChange={(e) => setSecurityAnswer(e.target.value)}
+                     className="w-full bg-white border border-slate-200 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-primary-teal/20" 
+                     placeholder="Enter answer" 
+                   />
                 </div>
 
-                <button className="w-full bg-primary-teal hover:bg-[#009E86] text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-primary-teal/20 active:scale-[0.98]">
+                <button 
+                  type="submit"
+                  className="w-full bg-primary-teal hover:bg-[#009E86] text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-primary-teal/20 active:scale-[0.98]"
+                >
                   Request Your Free Demo
                 </button>
               </form>
@@ -182,7 +297,10 @@ const LandingPage: React.FC = () => {
       </main>
 
       {/* Floating Action Button for the demo style */}
-      <div className="fixed bottom-10 left-10 z-40 bg-primary-teal text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-bold hover:scale-105 transition-all cursor-pointer border border-white/20">
+      <div 
+        onClick={() => document.getElementById('demo-form-section')?.scrollIntoView({ behavior: 'smooth' })}
+        className="fixed bottom-10 left-10 z-40 bg-primary-teal text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-bold hover:scale-105 transition-all cursor-pointer border border-white/20"
+      >
         <LayoutDashboard size={20} />
         Book Demo
       </div>
