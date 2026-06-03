@@ -41,7 +41,11 @@ export const appointmentService = {
   getAppointments: () => api.get('/appointments'),
   bookAppointment: (data: any) => api.post('/appointments', data),
 };
+export const diseaseService = {
+  getDiseases: () => api.get('/diseases'),
+};
 export const adminService = {
   createPatient: (patientData: any) => api.post('/admin/create-patient', patientData),
   getActivePatients: () => api.get('/admin/active-patients'),
 };
+

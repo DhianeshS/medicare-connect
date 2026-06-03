@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Calendar, MapPin, Star, ChevronRight, CheckCircle2, Stethoscope, XCircle } from 'lucide-react';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useLocation } from 'react-router-dom';
-import { doctorService } from '../services/api';
+import { doctorService, diseaseService, appointmentService } from '../services/api';
 
 interface Doctor {
   id: number;
@@ -30,11 +30,78 @@ const AppointmentBooking: React.FC = () => {
   const [bookingSlot, setBookingSlot] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  const [diseases, setDiseases] = useState<{ id: number; name: string }[]>([]);
+  const [selectedDisease, setSelectedDisease] = useState('');
+  const [customDisease, setCustomDisease] = useState('');
+  const [isBooking, setIsBooking] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState<{
+    doctorName: string;
+    date: string;
+    time: string;
+    disease: string;
+  } | null>(null);
+  const [bookingError, setBookingError] = useState('');
+
   const specialties = ['All', 'Cardiology', 'Pediatrics', 'Dermatology', 'Neurology', 'General Medicine', 'Gynecology'];
 
   useEffect(() => {
     fetchDoctors();
+    fetchDiseases();
   }, []);
+
+  const fetchDiseases = async () => {
+    try {
+      const response = await diseaseService.getDiseases();
+      setDiseases(response.data);
+    } catch (error) {
+      console.error("Error fetching diseases, using fallback:", error);
+      setDiseases([
+        { id: 1, name: 'Fever' },
+        { id: 2, name: 'Common Cold' },
+        { id: 3, name: 'Diarrhea' }
+      ]);
+    }
+  };
+
+  const handleBookAppointment = async () => {
+    if (!selectedDoctor || !bookingDate || !bookingSlot) return;
+    
+    const finalDisease = selectedDisease === 'Other' ? customDisease : selectedDisease;
+    if (!finalDisease) {
+      setBookingError("Please specify a disease or reason for booking.");
+      return;
+    }
+    
+    setIsBooking(true);
+    setBookingError('');
+    
+    try {
+      await appointmentService.bookAppointment({
+        doctorId: selectedDoctor.id,
+        appointmentDate: bookingDate,
+        appointmentTime: bookingSlot,
+        reason: finalDisease
+      });
+      
+      setBookingSuccess({
+        doctorName: `Dr. ${selectedDoctor.firstName} ${selectedDoctor.lastName}`,
+        date: bookingDate,
+        time: bookingSlot,
+        disease: finalDisease
+      });
+      
+      // Clear inputs
+      setBookingDate('');
+      setBookingSlot('');
+      setSelectedDisease('');
+      setCustomDisease('');
+    } catch (error: any) {
+      console.error("Booking error:", error);
+      setBookingError(error.response?.data?.message || "Failed to confirm reservation. Please try again.");
+    } finally {
+      setIsBooking(false);
+    }
+  };
 
   const fetchDoctors = async () => {
     try {
@@ -300,11 +367,54 @@ const AppointmentBooking: React.FC = () => {
                                 </div>
                             </div>
 
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Disease / Reason</label>
+                                <select 
+                                    value={selectedDisease}
+                                    onChange={(e) => {
+                                        setSelectedDisease(e.target.value);
+                                        if (e.target.value !== 'Other') {
+                                            setCustomDisease('');
+                                        }
+                                    }}
+                                    className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-4 focus:ring-primary-teal/5 transition-all text-xs font-bold text-secondary-navy"
+                                >
+                                    <option value="">-- Select Disease / Condition --</option>
+                                    {diseases.map(d => (
+                                        <option key={d.id} value={d.name}>{d.name}</option>
+                                    ))}
+                                    <option value="Other">Other / Custom Symptoms...</option>
+                                </select>
+                                
+                                {selectedDisease === 'Other' && (
+                                    <input 
+                                        type="text"
+                                        placeholder="Please specify your condition/symptoms..."
+                                        value={customDisease}
+                                        onChange={(e) => setCustomDisease(e.target.value)}
+                                        className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:ring-4 focus:ring-primary-teal/5 transition-all text-xs font-bold text-secondary-navy mt-3"
+                                    />
+                                )}
+                            </div>
+
+                            {bookingError && (
+                                <div className="text-red-500 text-xs font-bold px-2 py-1 bg-red-50 rounded-xl border border-red-100">
+                                    {bookingError}
+                                </div>
+                            )}
+
                             <button 
-                                disabled={!bookingDate || !bookingSlot}
+                                disabled={!bookingDate || !bookingSlot || !selectedDisease || (selectedDisease === 'Other' && !customDisease) || isBooking}
+                                onClick={handleBookAppointment}
                                 className="btn-primary w-full !py-5 rounded-[2rem] flex items-center justify-center gap-3 disabled:bg-slate-100 disabled:text-slate-400 shadow-xl shadow-primary-teal/20 hover:scale-105 active:scale-95 transition-all"
                             >
-                                <CheckCircle2 size={24} /> Confirm Reservation
+                                {isBooking ? (
+                                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <CheckCircle2 size={24} /> Confirm Reservation
+                                    </>
+                                )}
                             </button>
                         </div>
                     ) : (
@@ -320,6 +430,48 @@ const AppointmentBooking: React.FC = () => {
             </div>
         </div>
       </div>
+
+      {/* Booking Success Modal */}
+      {bookingSuccess && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-2xl border border-slate-100 text-center space-y-8 animate-scale-up">
+            <div className="bg-emerald-50 text-emerald-500 w-24 h-24 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
+              <CheckCircle2 size={48} />
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="text-3xl font-black text-secondary-navy tracking-tight">Appointment Confirmed!</h3>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Clinical Reservation Successful</p>
+            </div>
+            
+            <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 text-left space-y-4">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase tracking-wider">Physician</span>
+                <span className="text-secondary-navy font-black">{bookingSuccess.doctorName}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase tracking-wider">Date</span>
+                <span className="text-secondary-navy font-black">{bookingSuccess.date}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase tracking-wider">Time Slot</span>
+                <span className="text-secondary-navy font-black">{bookingSuccess.time}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold uppercase tracking-wider">Medical Case</span>
+                <span className="text-primary-teal font-black uppercase tracking-wider">{bookingSuccess.disease}</span>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setBookingSuccess(null)}
+              className="w-full bg-primary-teal hover:bg-[#009E86] text-white font-black py-4 rounded-2xl shadow-xl shadow-primary-teal/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };
