@@ -17,6 +17,13 @@ interface Doctor {
   availableWorkingHours: string;
 }
 
+const getLocalYYYYMMDD = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const AppointmentBooking: React.FC = () => {
   const location = useLocation();
   const preSelectedDoctorId = location.state?.preSelectedDoctorId;
@@ -199,7 +206,7 @@ const AppointmentBooking: React.FC = () => {
 
   const handleDateSelect = (day: number) => {
     const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    setBookingDate(d.toISOString().split('T')[0]);
+    setBookingDate(getLocalYYYYMMDD(d));
   };
 
   const handlePrevMonth = () => {
@@ -334,7 +341,7 @@ const AppointmentBooking: React.FC = () => {
                                                     onClick={() => day && handleDateSelect(day)}
                                                     className={`h-11 flex items-center justify-center rounded-2xl text-[11px] font-black transition-all ${
                                                         !day ? 'opacity-0 pointer-events-none' :
-                                                        (bookingDate === new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split('T')[0]
+                                                        (bookingDate === getLocalYYYYMMDD(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))
                                                             ? 'bg-primary-teal text-white shadow-xl shadow-primary-teal/20 scale-110' : 
                                                             (day % 5 === 0 ? 'bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed border border-transparent' : 'bg-white text-secondary-navy hover:shadow-xl hover:scale-110 cursor-pointer border border-slate-100')
                                                         )
