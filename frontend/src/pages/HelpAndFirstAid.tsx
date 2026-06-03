@@ -81,6 +81,7 @@ const firstAidData = [
 const HelpAndFirstAid: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [openId, setOpenId] = useState<string | null>(null);
+    const [sosActivated, setSosActivated] = useState(false);
 
     const filteredData = firstAidData.filter(item => 
         item.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -167,7 +168,10 @@ const HelpAndFirstAid: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-            <div className="card !rounded-[2.5rem] p-10 bg-secondary-navy text-white relative overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
+            <div 
+                onClick={() => setSosActivated(true)}
+                className="card !rounded-[2.5rem] p-10 bg-secondary-navy text-white relative overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer"
+            >
                 <div className="relative z-10">
                     <h3 className="text-2xl font-black mb-2">Emergency Services</h3>
                     <p className="text-sm text-white/60 font-medium mb-6">Connect with 24/7 emergency clinical support.</p>
@@ -193,6 +197,38 @@ const HelpAndFirstAid: React.FC = () => {
         </div>
 
       </div>
+
+      {/* SOS Activation Modal */}
+      {sosActivated && (
+        <div className="fixed inset-0 bg-red-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[3rem] p-10 max-w-md w-full shadow-2xl border-2 border-red-100 text-center space-y-8 animate-scale-up">
+            <div className="bg-red-50 text-red-600 w-24 h-24 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-lg shadow-red-600/10 animate-pulse">
+              <ShieldAlert size={48} />
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="text-3xl font-black text-red-600 tracking-tight">SOS Active!</h3>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Priority Trauma Dispatch Initialized</p>
+            </div>
+            
+            <div className="bg-red-50/50 rounded-[2rem] p-6 border border-red-50 text-left space-y-4">
+              <p className="text-xs text-red-700 font-bold leading-relaxed text-center">
+                Critical Alert: Emergency trauma protocols have been activated. Your clinical profile and GPS coordinates are now streaming to the nearest response unit.
+              </p>
+              <div className="w-full h-1 bg-red-100 rounded-full overflow-hidden">
+                <div className="h-full bg-red-600 animate-[pulse_1.5s_infinite] w-full"></div>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setSosActivated(false)}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Cancel SOS Protocol
+            </button>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };

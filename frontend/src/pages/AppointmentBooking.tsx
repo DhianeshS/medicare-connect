@@ -66,7 +66,7 @@ const AppointmentBooking: React.FC = () => {
   const handleBookAppointment = async () => {
     if (!selectedDoctor || !bookingDate || !bookingSlot) return;
     
-    const finalDisease = selectedDisease === 'Other' ? customDisease : selectedDisease;
+    const finalDisease = selectedDisease === 'Other' ? customDisease : (selectedDisease || 'General Consult');
     if (!finalDisease) {
       setBookingError("Please specify a disease or reason for booking.");
       return;
@@ -404,7 +404,7 @@ const AppointmentBooking: React.FC = () => {
                             )}
 
                             <button 
-                                disabled={!bookingDate || !bookingSlot || !selectedDisease || (selectedDisease === 'Other' && !customDisease) || isBooking}
+                                disabled={!bookingDate || !bookingSlot || isBooking}
                                 onClick={handleBookAppointment}
                                 className="btn-primary w-full !py-5 rounded-[2rem] flex items-center justify-center gap-3 disabled:bg-slate-100 disabled:text-slate-400 shadow-xl shadow-primary-teal/20 hover:scale-105 active:scale-95 transition-all"
                             >
