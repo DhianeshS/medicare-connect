@@ -305,9 +305,9 @@ const AppointmentBooking: React.FC = () => {
 
             {/* Booking Config Column */}
             <div className="lg:col-span-1 space-y-6">
-                <div className="sticky top-28 space-y-6">
+                <div className="lg:sticky lg:top-28 lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto custom-scrollbar space-y-6 pr-2">
                     {selectedDoctor ? (
-                        <div className="card !rounded-[3rem] p-10 border-none shadow-2xl shadow-slate-100 bg-white space-y-10">
+                        <div className="card !rounded-[2.5rem] p-8 border-none shadow-2xl shadow-slate-100 bg-white space-y-6">
                             <h3 className="text-2xl font-black text-secondary-navy tracking-tight leading-none mb-4">Clinical Booking</h3>
                             
                             <div className="space-y-6">
