@@ -171,6 +171,19 @@ const handleMockRequest = (method: string, url: string, data: any) => {
     return { data: newPatient, status: 200 };
   }
 
+  if (url.includes('/admin/doctors') && lowerMethod === 'post') {
+    const doctors = JSON.parse(localStorage.getItem('mc_doctors') || '[]');
+    const newDoctor = {
+      id: doctors.length + 1,
+      ...data,
+      status: data.availabilityStatus || 'AVAILABLE',
+      availabilityStatus: data.availabilityStatus || 'AVAILABLE'
+    };
+    doctors.push(newDoctor);
+    localStorage.setItem('mc_doctors', JSON.stringify(doctors));
+    return { data: newDoctor, status: 200 };
+  }
+
   if (url.includes('/admin/active-patients') && lowerMethod === 'get') {
     const patients = JSON.parse(localStorage.getItem('mc_patients') || '[]');
     return { data: patients, status: 200 };
@@ -230,4 +243,5 @@ export const diseaseService = {
 export const adminService = {
   createPatient: (patientData: any) => api.post('/admin/create-patient', patientData),
   getActivePatients: () => api.get('/admin/active-patients'),
+  createDoctor: (doctorData: any) => api.post('/admin/doctors', doctorData),
 };
